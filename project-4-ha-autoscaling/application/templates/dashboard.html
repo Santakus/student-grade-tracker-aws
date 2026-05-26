@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Status Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0f172a; --surface:#1e293b; --border:#334155; --text:#f1f5f9; --muted:#94a3b8; --primary:#6366f1; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --blue:#3b82f6; }
+        *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+        .container{max-width:1100px;margin:0 auto;padding:0 20px}
+        nav{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:30px}
+        .nav-inner{display:flex;justify-content:space-between;align-items:center}
+        .logo{font-size:1.3rem;font-weight:700;color:var(--text);text-decoration:none}.logo:hover{color:var(--text)}
+        .nav-links{display:flex;gap:16px;list-style:none}
+        .nav-links a{color:var(--muted);text-decoration:none;font-size:.9rem;padding:6px 14px;border-radius:6px;transition:.2s}
+        .nav-links a:hover,.nav-links a.active{color:#fff;background:var(--primary)}
+        .instance-badge{background:var(--surface);border:1px solid var(--border);padding:4px 12px;border-radius:50px;font-size:.75rem;color:var(--muted)}
+        h1{font-size:1.8rem;margin-bottom:24px}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center}
+        .stat-val{font-size:2rem;font-weight:700}.stat-lbl{font-size:.8rem;color:var(--muted);margin-top:4px}
+        .stat-card.on_track .stat-val{color:var(--success)}.stat-card.at_risk .stat-val{color:var(--warning)}
+        .stat-card.blocked .stat-val{color:var(--danger)}.stat-card.teams .stat-val{color:var(--blue)}
+        .grid{display:grid;grid-template-columns:2fr 1fr;gap:24px}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px}
+        .card-title{font-size:1.1rem;margin-bottom:16px;font-weight:600}
+        .update{border-bottom:1px solid var(--border);padding:16px 0}.update:last-child{border:none}
+        .update-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .team{font-weight:600;font-size:.95rem}.project{color:var(--muted);font-size:.8rem}
+        .status-pill{padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:600;text-transform:uppercase}
+        .status-on_track{background:rgba(16,185,129,.15);color:var(--success)}
+        .status-at_risk{background:rgba(245,158,11,.15);color:var(--warning)}
+        .status-blocked{background:rgba(239,68,68,.15);color:var(--danger)}
+        .status-completed{background:rgba(99,102,241,.15);color:var(--primary)}
+        .update-msg{color:var(--muted);font-size:.88rem;margin-bottom:4px}
+        .update-meta{font-size:.75rem;color:#475569}
+        .milestone{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:.88rem}
+        .milestone:last-child{border:none}
+        .milestone-title{font-weight:500}.milestone-date{color:var(--muted);font-size:.8rem}
+        .empty{color:var(--muted);text-align:center;padding:20px;font-size:.9rem}
+        @media(max-width:768px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container nav-inner">
+            <a href="/" class="logo">📋 Status Dashboard</a>
+            <ul class="nav-links">
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/update">Post Update</a></li>
+                <li><a href="/milestone">Add Milestone</a></li>
+            </ul>
+            <span class="instance-badge">Instance: {{ instance_id }}</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Team Status Dashboard</h1>
+
+        <div class="stats">
+            <div class="stat-card on_track">
+                <div class="stat-val">{{ status_counts.get('on_track', 0) }}</div>
+                <div class="stat-lbl">On Track</div>
+            </div>
+            <div class="stat-card at_risk">
+                <div class="stat-val">{{ status_counts.get('at_risk', 0) }}</div>
+                <div class="stat-lbl">At Risk</div>
+            </div>
+            <div class="stat-card blocked">
+                <div class="stat-val">{{ status_counts.get('blocked', 0) }}</div>
+                <div class="stat-lbl">Blocked</div>
+            </div>
+            <div class="stat-card teams">
+                <div class="stat-val">{{ team_count }}</div>
+                <div class="stat-lbl">Active Teams</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">📝 Recent Updates</div>
+                {% if updates %}
+                    {% for u in updates %}
+                    <div class="update">
+                        <div class="update-header">
+                            <div>
+                                <span class="team">{{ u.team_name }}</span>
+                                <span class="project">/ {{ u.project }}</span>
+                            </div>
+                            <span class="status-pill status-{{ u.status }}">{{ u.status | replace('_', ' ') }}</span>
+                        </div>
+                        <div class="update-msg">{{ u.message }}</div>
+                        <div class="update-meta">by {{ u.author }} · {{ u.created_at.strftime('%b %d, %H:%M') }} · {{ u.instance_id }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">No updates yet. <a href="/update">Post the first one</a>.</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-title">🎯 Upcoming Milestones</div>
+                    {% if milestones %}
+                        {% for m in milestones %}
+                        <div class="milestone">
+                            <div>
+                                <div class="milestone-title">{{ m.title }}</div>
+                                <div class="milestone-date">{{ m.project }}</div>
+                            </div>
+                            <div class="milestone-date">{{ m.due_date.strftime('%b %d') }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty">No milestones set.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

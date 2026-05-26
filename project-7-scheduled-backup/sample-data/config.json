@@ -1,0 +1,8 @@
+{
+    "project": "Scheduled Backup System",
+    "version": "1.0",
+    "config": {
+        "backup_interval": "6 hours",
+        "retention_days": 30
+    }
+}

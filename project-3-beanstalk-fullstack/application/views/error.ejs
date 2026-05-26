@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error — Student Grade Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="logo">📊 Grade Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/students">Students</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="card empty-state-card" style="text-align: center; margin-top: 60px;">
+            <h2>⚠️ Something went wrong</h2>
+            <p><%= message %></p>
+            <a href="/" class="btn btn-primary" style="margin-top: 20px;">Back to Dashboard</a>
+        </div>
+    </main>
+</body>
+</html>

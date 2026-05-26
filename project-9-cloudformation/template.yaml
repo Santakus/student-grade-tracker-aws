@@ -1,0 +1,228 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  CloudFormation template that provisions a complete web server environment:
+  VPC, public subnet, Internet Gateway, security group, and an EC2 instance
+  running a Node.js "Hello World" web app.
+
+# ==========================================
+# PARAMETERS
+# ==========================================
+Parameters:
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t3.micro
+      - t3.small
+    ConstraintDescription: Must be a valid free-tier eligible instance type.
+
+  KeyPairName:
+    Description: Name of an existing EC2 key pair for SSH access (leave empty to skip SSH)
+    Type: String
+    Default: ''
+
+  YourIP:
+    Description: Your public IP address for SSH access (e.g., 203.0.113.0/32). Leave as default to allow all.
+    Type: String
+    Default: '0.0.0.0/0'
+
+# ==========================================
+# CONDITIONS
+# ==========================================
+Conditions:
+  HasKeyPair: !Not [!Equals [!Ref KeyPairName, '']]
+
+# ==========================================
+# RESOURCES
+# ==========================================
+Resources:
+
+  # --- VPC ---
+  ProjectVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: cfn-project-vpc
+
+  # --- Internet Gateway ---
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: cfn-project-igw
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ProjectVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # --- Public Subnet ---
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ProjectVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: cfn-project-public-subnet
+
+  # --- Route Table ---
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ProjectVPC
+      Tags:
+        - Key: Name
+          Value: cfn-project-public-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # --- Security Group ---
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and SSH access
+      VpcId: !Ref ProjectVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTP from anywhere
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref YourIP
+          Description: Allow SSH from your IP
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic
+      Tags:
+        - Key: Name
+          Value: cfn-project-web-sg
+
+  # --- EC2 Instance ---
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !If [HasKeyPair, !Ref KeyPairName, !Ref 'AWS::NoValue']
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: cfn-project-web-server
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+
+          # Update system
+          yum update -y
+
+          # Install Node.js
+          curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+          yum install -y nodejs
+
+          # Create the application
+          mkdir -p /home/ec2-user/app
+          cd /home/ec2-user/app
+
+          cat > package.json << 'EOF'
+          {
+            "name": "hello-cloudformation",
+            "version": "1.0.0",
+            "main": "app.js",
+            "dependencies": { "express": "^4.18.2" }
+          }
+          EOF
+
+          cat > app.js << 'EOF'
+          const express = require('express');
+          const os = require('os');
+          const app = express();
+
+          app.get('/', (req, res) => {
+              res.send(`<!DOCTYPE html>
+              <html><head><title>Hello from CloudFormation!</title>
+              <style>
+              *{margin:0;padding:0;box-sizing:border-box}
+              body{font-family:sans-serif;background:linear-gradient(135deg,#0f172a,#1e1b4b);color:#f1f5f9;min-height:100vh;display:flex;justify-content:center;align-items:center}
+              .card{background:rgba(30,41,59,0.9);border:1px solid rgba(99,102,241,0.2);border-radius:16px;padding:40px;max-width:500px;text-align:center;backdrop-filter:blur(10px)}
+              h1{color:#818cf8;margin-bottom:16px;font-size:1.8rem}
+              p{color:#94a3b8;margin-bottom:8px}
+              .badge{display:inline-block;margin-top:16px;padding:6px 14px;background:rgba(16,185,129,0.15);color:#10b981;border-radius:50px;font-size:0.8rem}
+              .info{margin-top:20px;font-size:0.85rem;color:#64748b}
+              </style></head><body>
+              <div class="card">
+              <h1>🚀 Hello from CloudFormation!</h1>
+              <p>This web server was provisioned entirely using Infrastructure as Code.</p>
+              <span class="badge">✅ Stack: ${AWS::StackName}</span>
+              <div class="info">
+              <p>Hostname: $${os.hostname()}</p>
+              <p>Region: ${AWS::Region}</p>
+              <p>Instance Type: ${InstanceType}</p>
+              </div></div></body></html>`);
+          });
+
+          app.get('/health', (req, res) => res.json({ status: 'healthy' }));
+
+          app.listen(80, () => console.log('Server running on port 80'));
+          EOF
+
+          npm install
+          node app.js &
+
+# ==========================================
+# OUTPUTS
+# ==========================================
+Outputs:
+  VPCId:
+    Description: VPC ID
+    Value: !Ref ProjectVPC
+
+  PublicSubnetId:
+    Description: Public Subnet ID
+    Value: !Ref PublicSubnet
+
+  SecurityGroupId:
+    Description: Web Server Security Group ID
+    Value: !Ref WebServerSecurityGroup
+
+  InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref WebServerInstance
+
+  PublicIP:
+    Description: Public IP address of the web server
+    Value: !GetAtt WebServerInstance.PublicIp
+
+  WebsiteURL:
+    Description: URL to access the web application
+    Value: !Sub 'http://${WebServerInstance.PublicIp}'

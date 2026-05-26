@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Update — Status Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;--primary:#6366f1}
+        *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+        .container{max-width:600px;margin:0 auto;padding:40px 20px}
+        h1{font-size:1.5rem;margin-bottom:24px}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px}
+        .form-group{margin-bottom:18px}label{display:block;margin-bottom:6px;font-weight:500;font-size:.9rem;color:var(--muted)}
+        input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;background:#0f172a;color:var(--text);font-family:inherit;font-size:.9rem;outline:none}
+        input:focus,select:focus,textarea:focus{border-color:var(--primary)}textarea{resize:vertical;min-height:100px}
+        .btn{display:inline-block;padding:10px 24px;border:none;border-radius:6px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s}
+        .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{opacity:.9}
+        .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);margin-left:10px}
+        .actions{display:flex;gap:12px;margin-top:8px}
+        a{color:var(--primary);text-decoration:none}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Post Status Update</h1>
+        <div class="card">
+            <form method="POST" action="/update">
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" name="team_name" placeholder="e.g. Backend Team" required>
+                </div>
+                <div class="form-group">
+                    <label>Project</label>
+                    <input type="text" name="project" placeholder="e.g. User Authentication Service" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" required>
+                        <option value="on_track">✅ On Track</option>
+                        <option value="at_risk">⚠️ At Risk</option>
+                        <option value="blocked">🚫 Blocked</option>
+                        <option value="completed">🎉 Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Update Message</label>
+                    <textarea name="message" placeholder="What's the latest status?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" name="author" placeholder="e.g. John Doe" required>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Post Update</button>
+                    <a href="/" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

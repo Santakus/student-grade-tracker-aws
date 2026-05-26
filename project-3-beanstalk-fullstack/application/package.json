@@ -1,0 +1,19 @@
+{
+  "name": "student-grade-tracker",
+  "version": "1.0.0",
+  "description": "A student grade tracker built with Node.js, Express, EJS, and PostgreSQL (RDS)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

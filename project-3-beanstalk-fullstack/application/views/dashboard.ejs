@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Student Grade Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="logo">📊 Grade Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/students">Students</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1 class="page-title">Dashboard</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value"><%= totalStudents %></div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value"><%= totalGrades %></div>
+                <div class="stat-label">Total Grades</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value"><%= classAverage %>%</div>
+                <div class="stat-label">Class Average</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">🏆 Top 5 Students</h2>
+                <% if (topStudents.length > 0) { %>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student</th>
+                                <th>Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% topStudents.forEach((s, i) => { %>
+                            <tr>
+                                <td><span class="rank-badge"><%= i + 1 %></span></td>
+                                <td><%= s.first_name %> <%= s.last_name %></td>
+                                <td><strong><%= s.avg_score %>%</strong></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p class="empty-state">No grades recorded yet. <a href="/students">Add students</a> to get started.</p>
+                <% } %>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">📊 Grade Distribution</h2>
+                <% if (gradeDistribution.length > 0) { %>
+                    <div class="grade-bars">
+                        <% const gradeColors = { A: '#10b981', B: '#6366f1', C: '#f59e0b', D: '#f97316', F: '#ef4444' }; %>
+                        <% const totalGradesNum = gradeDistribution.reduce((sum, g) => sum + parseInt(g.count), 0); %>
+                        <% gradeDistribution.forEach(g => { %>
+                            <div class="grade-bar-row">
+                                <span class="grade-label"><%= g.grade_letter %></span>
+                                <div class="grade-bar-track">
+                                    <div class="grade-bar-fill" style="width: <%= (parseInt(g.count) / totalGradesNum * 100) %>%; background: <%= gradeColors[g.grade_letter] || '#6366f1' %>"></div>
+                                </div>
+                                <span class="grade-count"><%= g.count %></span>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p class="empty-state">No grade data available yet.</p>
+                <% } %>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

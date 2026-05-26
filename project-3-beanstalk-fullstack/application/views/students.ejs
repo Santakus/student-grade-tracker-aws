@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students — Student Grade Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="logo">📊 Grade Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/students" class="active">Students</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Students</h1>
+            <a href="/students/new" class="btn btn-primary">+ Add Student</a>
+        </div>
+
+        <% if (students.length > 0) { %>
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Grades</th>
+                            <th>Average</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% students.forEach(s => { %>
+                        <tr>
+                            <td><a href="/students/<%= s.id %>"><%= s.first_name %> <%= s.last_name %></a></td>
+                            <td><%= s.email %></td>
+                            <td><%= s.grade_count %></td>
+                            <td>
+                                <% if (parseFloat(s.avg_score) > 0) { %>
+                                    <span class="badge badge-<%= parseFloat(s.avg_score) >= 70 ? 'success' : parseFloat(s.avg_score) >= 50 ? 'warning' : 'danger' %>">
+                                        <%= s.avg_score %>%
+                                    </span>
+                                <% } else { %>
+                                    <span class="text-muted">N/A</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <a href="/students/<%= s.id %>" class="btn btn-sm btn-outline">View</a>
+                                <a href="/students/<%= s.id %>/grades/new" class="btn btn-sm btn-primary">Add Grade</a>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="card empty-state-card">
+                <h3>No students yet</h3>
+                <p>Click the button above to add your first student.</p>
+            </div>
+        <% } %>
+    </main>
+</body>
+</html>

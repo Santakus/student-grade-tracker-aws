@@ -1,0 +1,4 @@
+This is a sample document for testing the S3 backup system.
+
+Project: Scheduled Backup & Notification System
+Purpose: Verify that backup Lambda copies files correctly.
